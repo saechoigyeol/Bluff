@@ -11,13 +11,16 @@ public sealed class GameplayPresentationController : MonoBehaviour
     private Action presentationChanged;
     private bool isChipAnimating;
     private bool isCardAnimating;
+    private bool isChipPocketAnimating;
+    private ChipPocketPresentation activeChipPocket;
     private bool isFoldRevealComplete;
 
     public event Action<GameplayPresentationCue> CueRaised;
 
     public bool IsChipAnimating => isChipAnimating;
     public bool IsCardAnimating => isCardAnimating;
-    public bool IsBusy => isChipAnimating || isCardAnimating;
+    public bool IsChipPocketAnimating => isChipPocketAnimating;
+    public bool IsBusy => isChipAnimating || isCardAnimating || isChipPocketAnimating;
 
     public void Initialize(GameState gameState, Action presentationChanged)
     {
@@ -25,6 +28,46 @@ public sealed class GameplayPresentationController : MonoBehaviour
         this.presentationChanged = presentationChanged;
         cardVisualController?.Initialize(gameState, RaiseCue);
         chipVisualController?.Initialize(gameState);
+    }
+
+    public void PlayChipPocket(TurnOwner owner, GameObject item)
+    {
+        ChipPocketPresentation pocket = item != null
+            ? item.GetComponentInChildren<ChipPocketPresentation>()
+            : null;
+        if (isChipPocketAnimating || chipVisualController == null || item == null ||
+            !chipVisualController.TryGetChipPocketTargets(owner, out Vector3[] targets) ||
+            pocket == null)
+        {
+            chipVisualController?.RefreshChips();
+            return;
+        }
+
+        isChipPocketAnimating = true;
+        activeChipPocket = pocket;
+        if (!pocket.TryPlay(targets,
+                () => chipVisualController?.RefreshChips(),
+                OnChipPocketFinished))
+        {
+            isChipPocketAnimating = false;
+            activeChipPocket = null;
+            chipVisualController.RefreshChips();
+        }
+    }
+
+    private void OnChipPocketFinished()
+    {
+        isChipPocketAnimating = false;
+        activeChipPocket = null;
+        if (isActiveAndEnabled)
+        {
+            NotifyChanged();
+        }
+    }
+
+    private void OnDisable()
+    {
+        activeChipPocket?.Cancel();
     }
 
     public void PlayRefresh()
@@ -277,7 +320,7 @@ public sealed class GameplayPresentationController : MonoBehaviour
         int dealerChipsBefore,
         int potBefore)
     {
-        if (chipVisualController == null ||
+        if (chipVisualController == null || isChipPocketAnimating ||
             (playerChipsBefore == gameState.PlayerChips.Count &&
              dealerChipsBefore == gameState.DealerChips.Count &&
              potBefore == gameState.Pot.Amount))

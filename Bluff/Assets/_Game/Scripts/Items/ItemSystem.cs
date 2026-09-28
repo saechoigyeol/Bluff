@@ -10,6 +10,7 @@ public class ItemSystem : MonoBehaviour
     private ItemGameApi itemGameApi;
 
     public event System.Action RefreshCardSucceeded;
+    public event System.Action<TurnOwner, GameObject> ChipPocketConsumed;
     internal event System.Action<GameObject> PlayerItemUseRequested;
 
     public List<GameObject> itemList = new List<GameObject>(); // 전체 아이템 목록
@@ -18,7 +19,7 @@ public class ItemSystem : MonoBehaviour
     [SerializeField] private GameObject[] dealerItemSpawnPos = new GameObject[4]; // 딜러 아이템 스폰 위치
 
     [Header("아이템 수치")]
-    [SerializeField] private int chipPocketAmount = 2; // 칩 포켓 아이템으로 얻는 칩 수량
+    [SerializeField] private int chipPocketAmount = 3; // 칩 포켓 아이템으로 얻는 칩 수량
 
     public void Initialize(ItemGameApi itemGameApi)
     {
@@ -95,7 +96,7 @@ public class ItemSystem : MonoBehaviour
             return false;
         }
 
-        return RemoveUsedItem(owner, item);
+        return RemoveUsedItem(owner, item, type);
     }
 
     // 사용할 ItemType 가져오기
@@ -140,11 +141,25 @@ public class ItemSystem : MonoBehaviour
     }
 
     // 인벤토리 먼저 제거 -> 아이템도 실제로 제거 
-    private bool RemoveUsedItem(TurnOwner owner, GameObject item)
+    private bool RemoveUsedItem(TurnOwner owner, GameObject item, ItemType type)
     {
         if (!inventory.TryRemoveItem(owner, item))
         {
             return false;
+        }
+
+        // The effect is already committed. Let the presentation detach its visuals
+        // while the consumed item still exists.
+        if (type == ItemType.chipPocket)
+        {
+            try
+            {
+                ChipPocketConsumed?.Invoke(owner, item);
+            }
+            catch (System.Exception exception)
+            {
+                Debug.LogException(exception, this);
+            }
         }
 
         if (Application.isPlaying)
@@ -307,7 +322,7 @@ public class ItemSystem : MonoBehaviour
             return false;
         }
 
-        Debug.Log("'칩 포켓' 아이템이 사용되었습니다. 일정량의 칩을 얻습니다.");
+        Debug.Log($"'칩 포켓' 아이템이 사용되었습니다. 칩 {chipPocketAmount}개를 얻습니다.");
         return true;
     }
 

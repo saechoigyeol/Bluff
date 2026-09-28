@@ -39,7 +39,7 @@ public sealed class ItemSystemTests
 
         itemComponent.Use();
 
-        Assert.That(gameState.PlayerChips.Count, Is.EqualTo(expectedSuccess ? 22 : 20));
+        Assert.That(gameState.PlayerChips.Count, Is.EqualTo(expectedSuccess ? 23 : 20));
         Assert.That(gameState.DealerChips.Count, Is.EqualTo(20));
         Assert.That(inventory.playerItemInventory[0] == null, Is.EqualTo(expectedSuccess));
         Assert.That(item == null, Is.EqualTo(expectedSuccess));
@@ -122,8 +122,33 @@ public sealed class ItemSystemTests
             Is.True);
 
         Assert.That(gameState.PlayerChips.Count, Is.EqualTo(20));
-        Assert.That(gameState.DealerChips.Count, Is.EqualTo(22));
+        Assert.That(gameState.DealerChips.Count, Is.EqualTo(23));
         Assert.That(inventory.dealerItemInventory, Is.All.Null);
+        Assert.That(item == null, Is.True);
+    }
+
+    [Test]
+    public void ChipPocketConsumed_FiresAfterCommitBeforeItemDestruction()
+    {
+        GameState gameState = CreateBettingGame(TurnOwner.Player);
+        ItemSystem itemSystem = CreateItemSystem(gameState, out Inventory inventory);
+        GameObject item = AddItem(inventory, TurnOwner.Player, ItemType.chipPocket);
+        bool notified = false;
+        bool committedBeforeDestruction = false;
+        itemSystem.ChipPocketConsumed += (owner, consumedItem) =>
+        {
+            notified = true;
+            committedBeforeDestruction =
+                owner == TurnOwner.Player &&
+                ReferenceEquals(consumedItem, item) &&
+                consumedItem != null &&
+                !inventory.HasItem(owner, consumedItem) &&
+                gameState.PlayerChips.Count == 23;
+        };
+
+        Assert.That(itemSystem.UseItem(TurnOwner.Player, item), Is.True);
+        Assert.That(notified, Is.True);
+        Assert.That(committedBeforeDestruction, Is.True);
         Assert.That(item == null, Is.True);
     }
 
