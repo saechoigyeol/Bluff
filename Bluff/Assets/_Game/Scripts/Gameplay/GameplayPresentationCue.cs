@@ -1,5 +1,10 @@
 public enum GameplayPresentationCue
 {
     CardDeal,
-    ChipBet
+    ChipBet,
+    Item_ChipsPocket,
+    Item_Defy,
+    Item_PrizmChip,
+    Item_RefreshCard,
+    Click
 }

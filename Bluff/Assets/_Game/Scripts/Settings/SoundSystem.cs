@@ -15,6 +15,12 @@ public class SoundSystem : MonoBehaviour
     [SerializeField] private AudioSource[] bgmList;
     [SerializeField] private AudioSource chipStackSFX;
     [SerializeField] private AudioSource cardSFX;
+    [SerializeField] private AudioSource itemChipsPocketSFX;
+    [SerializeField] private AudioSource itemDefySFX;
+    [SerializeField] private AudioSource itemPrizmChipSFX;
+    [SerializeField] private AudioSource itemRefreshCardSFX;
+    [SerializeField] private AudioSource clickSFX;
+
 
     private int currentBGMIndex = 0;
 
@@ -69,6 +75,7 @@ public class SoundSystem : MonoBehaviour
         StopCoroutine(RepeatPlaybackBGM(currentBGMIndex));
     }
 
+    // SFX Play
     public void PlayChipStackSFX()
     {
         AudioSource instantiateSFX = Instantiate(chipStackSFX, this.gameObject.transform);
@@ -83,6 +90,42 @@ public class SoundSystem : MonoBehaviour
         Destroy(instantiatedSFX.gameObject, instantiatedSFX.clip.length);
     }
 
+    public void PlayItemChipsPocketSFX()
+    {
+        AudioSource instantiatedSFX = Instantiate(itemChipsPocketSFX, this.gameObject.transform);
+        instantiatedSFX.Play();
+        Destroy(instantiatedSFX.gameObject, instantiatedSFX.clip.length);
+    }
+
+    public void PlayItemDefySFX()
+    {
+        AudioSource instantiatedSFX = Instantiate(itemDefySFX, this.gameObject.transform);
+        instantiatedSFX.Play();
+        Destroy(instantiatedSFX.gameObject, instantiatedSFX.clip.length);
+    }
+
+    public void PlayItemPrizmChipSFX()
+    {
+        AudioSource instantiatedSFX = Instantiate(itemPrizmChipSFX, this.gameObject.transform);
+        instantiatedSFX.Play();
+        Destroy(instantiatedSFX.gameObject, instantiatedSFX.clip.length);
+    }
+
+    public void PlayItemRefreshCardSFX()
+    {
+        AudioSource instantiatedSFX = Instantiate(itemRefreshCardSFX, this.gameObject.transform);
+        instantiatedSFX.Play();
+        Destroy(instantiatedSFX.gameObject, instantiatedSFX.clip.length);
+    }
+
+    public void PlayClickSFX()
+    {
+        AudioSource instantiatedSFX = Instantiate(clickSFX, this.gameObject.transform);
+        instantiatedSFX.Play();
+        Destroy(instantiatedSFX.gameObject, instantiatedSFX.clip.length);
+    }
+
+    // Set Volume
     public void SetMasterVolume(float volume)
     {
         if (volume < 0.0001f)
