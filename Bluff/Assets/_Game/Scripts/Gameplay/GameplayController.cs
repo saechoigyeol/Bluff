@@ -353,6 +353,7 @@ public sealed class GameplayController : MonoBehaviour
         {
             subscribedItemSystem.RefreshCardSucceeded += OnRefreshCardSucceeded;
             subscribedItemSystem.PlayerItemUseRequested += OnPlayerItemUseRequested;
+            subscribedItemSystem.ChipPocketConsumed += OnChipPocketConsumed;
         }
     }
 
@@ -361,6 +362,7 @@ public sealed class GameplayController : MonoBehaviour
         if (subscribedItemSystem != null)
         {
             subscribedItemSystem.RefreshCardSucceeded -= OnRefreshCardSucceeded;
+            subscribedItemSystem.ChipPocketConsumed -= OnChipPocketConsumed;
             if (unsubscribePlayerRequests)
             {
                 subscribedItemSystem.PlayerItemUseRequested -= OnPlayerItemUseRequested;
@@ -392,6 +394,11 @@ public sealed class GameplayController : MonoBehaviour
     private void OnRefreshCardSucceeded()
     {
         presentation.PlayRefresh();
+    }
+
+    private void OnChipPocketConsumed(TurnOwner owner, GameObject item)
+    {
+        presentation?.PlayChipPocket(owner, item);
     }
 
     private void StartRound()
@@ -720,7 +727,7 @@ public sealed class GameplayController : MonoBehaviour
                 yield break;
             }
 
-            while (presentation.IsCardAnimating)
+            while (presentation.IsCardAnimating || presentation.IsChipPocketAnimating)
             {
                 if (isShuttingDown ||
                     isRestarting ||

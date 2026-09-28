@@ -70,6 +70,34 @@ public sealed class ChipVisualController : MonoBehaviour
         RefreshChips();
     }
 
+    public bool TryGetChipPocketTargets(TurnOwner owner, out Vector3[] positions)
+    {
+        positions = null;
+        Transform area = owner == TurnOwner.Player ? playerChipArea :
+            owner == TurnOwner.Dealer ? dealerChipArea : null;
+        if (area == null || gameState == null)
+        {
+            return false;
+        }
+
+        int count = owner == TurnOwner.Player
+            ? gameState.PlayerChips.Count
+            : gameState.DealerChips.Count;
+        if (count < 3)
+        {
+            return false;
+        }
+
+        positions = new Vector3[3];
+        for (int index = 0; index < positions.Length; index++)
+        {
+            positions[index] = area.TransformPoint(
+                GetChipLocalPosition(count - positions.Length + index,
+                    owner == TurnOwner.Dealer));
+        }
+        return true;
+    }
+
     public void RefreshChips()
     {
         if (pendingChips.Count > 0)

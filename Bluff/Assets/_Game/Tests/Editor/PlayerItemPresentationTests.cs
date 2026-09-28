@@ -105,19 +105,115 @@ public sealed class PlayerItemPresentationTests
     }
 
     [Test]
-    public void PlayerPocket_ImmediatelyAddsTwoVisualChipsAndConsumesOnlyOneItem()
+    public void PlayerPocket_ImmediatelyAddsThreeVisualChipsAndConsumesOnlyOneItem()
     {
         Invoke(ui, "OnEnable");
         Invoke(ui, "OnEnable");
         GameObject first = Add(TurnOwner.Player, ItemType.chipPocket);
         GameObject second = Add(TurnOwner.Player, ItemType.chipPocket);
         first.GetComponent<Item>().Use();
-        Assert.That(game.PlayerChips.Count, Is.EqualTo(21));
+        Assert.That(game.PlayerChips.Count, Is.EqualTo(22));
         Assert.That(first == null, Is.True);
         Assert.That(inventory.HasItem(TurnOwner.Player, second), Is.True);
         Assert.That(game.CurrentTurn, Is.EqualTo(TurnOwner.Player));
         Assert.That(game.Phase, Is.EqualTo(GamePhase.Betting));
         AssertChipVisuals();
+    }
+
+    [Test]
+    public void PlayerPocket_DetachesVisualAndSyncsOnlyAfterArrival()
+    {
+        GameObject item = Add(TurnOwner.Player, ItemType.chipPocket);
+        ChipPocketPresentation pocket = AttachPocketVisual(item);
+        int before = Count("playerChipInstances");
+
+        item.GetComponent<Item>().Use();
+
+        Assert.That(game.PlayerChips.Count, Is.EqualTo(before + 3));
+        Assert.That(inventory.HasItem(TurnOwner.Player, item), Is.False);
+        Assert.That(item == null, Is.True);
+        Assert.That(pocket == null, Is.False);
+        Assert.That(pocket.transform.parent, Is.Null);
+        Assert.That(presentation.IsChipPocketAnimating, Is.True);
+        Assert.That(Count("playerChipInstances"), Is.EqualTo(before));
+
+        CompletePocket(pocket);
+
+        Assert.That(presentation.IsChipPocketAnimating, Is.False);
+        Assert.That(pocket == null, Is.True);
+        AssertChipVisuals();
+    }
+
+    [Test]
+    public void PlayerPocket_LidSeparatesBeforeFirstChipLaunch()
+    {
+        GameObject item = Add(TurnOwner.Player, ItemType.chipPocket);
+        ChipPocketPresentation pocket = AttachPocketVisual(item);
+        Transform lid = (Transform)Get(pocket, "rightLid");
+        Transform firstChip = (Transform)Get(pocket, "chip01");
+
+        item.GetComponent<Item>().Use();
+        Sequence animation = (Sequence)Get(pocket, "sequence");
+        animation.SetUpdate(UpdateType.Manual);
+        float beforeFirstChipLaunch =
+            (float)Get(pocket, "liftDuration") +
+            (float)Get(pocket, "lidPopDuration") +
+            (float)Get(pocket, "afterLidPopDelay") * 0.5f;
+        DOTween.ManualUpdate(beforeFirstChipLaunch, beforeFirstChipLaunch);
+
+        Assert.That(lid.parent, Is.Null);
+        Assert.That(firstChip.parent, Is.EqualTo(pocket.transform));
+        Assert.That(presentation.IsChipPocketAnimating, Is.True);
+        CompletePocket(pocket);
+        AssertChipVisuals();
+    }
+
+    [Test]
+    public void PlayerPocket_CancelRestoresLatestChipVisual()
+    {
+        GameObject item = Add(TurnOwner.Player, ItemType.chipPocket);
+        ChipPocketPresentation pocket = AttachPocketVisual(item);
+        item.GetComponent<Item>().Use();
+
+        Assert.That(presentation.IsChipPocketAnimating, Is.True);
+        pocket.Cancel();
+
+        Assert.That(presentation.IsChipPocketAnimating, Is.False);
+        AssertChipVisuals();
+    }
+
+    [Test]
+    public void ChipPocketPrefab_UsesSplitBodyAndCap()
+    {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/_Game/Prefabs/Items/Item_ChipsPocket.prefab");
+        Assert.That(prefab, Is.Not.Null);
+        GameObject instance = Track((GameObject)PrefabUtility.InstantiatePrefab(prefab));
+        ChipPocketPresentation pocket =
+            instance.GetComponentInChildren<ChipPocketPresentation>();
+        Assert.That(pocket, Is.Not.Null);
+        Transform caseRoot = (Transform)Get(pocket, "caseTransform");
+        Transform lidRoot = (Transform)Get(pocket, "rightLid");
+        MeshFilter body = caseRoot.GetComponent<MeshFilter>();
+        MeshFilter cap = lidRoot.GetComponentInChildren<MeshFilter>();
+        Assert.That(body, Is.Not.Null);
+        Assert.That(cap, Is.Not.Null);
+        Assert.That(body.sharedMesh, Is.Not.Null);
+        Assert.That(cap.sharedMesh, Is.Not.Null);
+        Assert.That(body.sharedMesh.name, Is.EqualTo("Chip_Pack"));
+        Assert.That(cap.sharedMesh.name, Is.EqualTo("Chip_Pack_Cap"));
+        Assert.That(AssetDatabase.GetAssetPath(body.sharedMesh),
+            Is.EqualTo("Assets/_Game/Prefabs/Items/Chip_Pack_bunri.fbx"));
+        Assert.That(AssetDatabase.GetAssetPath(cap.sharedMesh),
+            Is.EqualTo("Assets/_Game/Prefabs/Items/Chip_Pack_bunri.fbx"));
+        Assert.That(caseRoot.GetComponent<MeshRenderer>(), Is.Not.Null);
+        Assert.That(lidRoot.GetComponentInChildren<MeshRenderer>(), Is.Not.Null);
+        Assert.That(lidRoot.childCount, Is.EqualTo(1));
+        Assert.That(lidRoot.GetChild(0).name, Is.EqualTo("Chip_Pack_Cap"));
+        Assert.That(instance.GetComponent<CapsuleCollider>().bounds.Contains(
+            body.GetComponent<Renderer>().bounds.center), Is.True);
+        Assert.That(instance.GetComponent<CapsuleCollider>().bounds.Contains(
+            cap.GetComponent<Renderer>().bounds.center), Is.True);
     }
 
     [Test]
@@ -178,6 +274,39 @@ public sealed class PlayerItemPresentationTests
             Is.True);
     }
 
+    [Test]
+    public void DealerPocket_WaitsForArrivalBeforeNextAction()
+    {
+        var state = new GameState(20, 6, Deck.CreateIndianHoldemDeck());
+        Assert.That(state.TryStartRound(TurnOwner.Dealer), Is.True);
+        state.TrySetPlayerCard(new Card(4));
+        state.TrySetDealerCard(new Card(1));
+        state.TrySetCommunityCards(new Card(4), new Card(2));
+        Bind(state);
+        GameObject item = Add(TurnOwner.Dealer, ItemType.chipPocket);
+        ChipPocketPresentation pocket = AttachPocketVisual(item);
+        Set(ui, "minDealerThinkDelay", 0f);
+        Set(ui, "maxDealerThinkDelay", 0f);
+        Random.InitState(FindDealerSeed(ItemType.chipPocket));
+        var routine = (IEnumerator)Invoke(ui, "PerformDealerActionAfterDelay");
+
+        Assert.That(routine.MoveNext(), Is.True);
+        Assert.That(routine.MoveNext(), Is.True);
+        Assert.That(item == null, Is.True);
+        Assert.That(game.DealerChips.Count, Is.EqualTo(8));
+        Assert.That(presentation.IsChipPocketAnimating, Is.True);
+        Assert.That(game.CurrentTurn, Is.EqualTo(TurnOwner.Dealer));
+        Assert.That(routine.MoveNext(), Is.True);
+        Assert.That(game.CurrentTurn, Is.EqualTo(TurnOwner.Dealer));
+
+        CompletePocket(pocket);
+
+        Assert.That(presentation.IsChipPocketAnimating, Is.False);
+        Assert.That(routine.MoveNext(), Is.False);
+        Assert.That(game.CurrentTurn, Is.Not.EqualTo(TurnOwner.Dealer));
+        AssertChipVisuals();
+    }
+
     [TestCase(false)]
     [TestCase(true)]
     public void PlayerPrizm_UsesPreEffectPotCompletesFoldRevealAndShowsResult(bool finalRound)
@@ -236,7 +365,7 @@ public sealed class PlayerItemPresentationTests
         Assert.That(delay.MoveNext(), Is.False);
         CompleteChipMoves();
         AssertChipVisuals();
-        Assert.That(game.PlayerChips.Count, Is.EqualTo(21));
+        Assert.That(game.PlayerChips.Count, Is.EqualTo(22));
         Assert.That(game.Phase, Is.EqualTo(GamePhase.RoundEnd));
     }
 
@@ -299,7 +428,7 @@ public sealed class PlayerItemPresentationTests
         Assert.That(game.PlayerChips.Count, Is.EqualTo(19));
         ui.enabled = true;
         item.GetComponent<Item>().Use();
-        Assert.That(game.PlayerChips.Count, Is.EqualTo(21));
+        Assert.That(game.PlayerChips.Count, Is.EqualTo(22));
         Assert.That(item == null, Is.True);
         AssertChipVisuals();
     }
@@ -341,7 +470,7 @@ public sealed class PlayerItemPresentationTests
             Assert.That(((GameObject)Get(view, "resultOverlay")).activeSelf, Is.True);
             if (type == ItemType.chipPocket)
             {
-                Assert.That(game.DealerChips.Count, Is.EqualTo(7));
+                Assert.That(game.DealerChips.Count, Is.EqualTo(8));
                 Assert.That(logs, Has.Some.Contains("일반 행동 재계산"));
             }
             else
@@ -381,6 +510,27 @@ public sealed class PlayerItemPresentationTests
         foreach (Tween move in moves) move.SetUpdate(UpdateType.Manual);
         DOTween.ManualUpdate(10f, 10f);
         Assert.That(((List<GameObject>)Get(chips, "pendingChips")), Is.Empty);
+    }
+
+    private ChipPocketPresentation AttachPocketVisual(GameObject item)
+    {
+        Transform root = CreateObject("VisualRoot", item.transform).transform;
+        ChipPocketPresentation pocket = root.gameObject.AddComponent<ChipPocketPresentation>();
+        Set(pocket, "visualRoot", root);
+        Set(pocket, "caseTransform", CreateObject("Case", root).transform);
+        Set(pocket, "rightLid", CreateObject("RightLid", root).transform);
+        Set(pocket, "chip01", CreateObject("Chip_01", root).transform);
+        Set(pocket, "chip02", CreateObject("Chip_02", root).transform);
+        Set(pocket, "chip03", CreateObject("Chip_03", root).transform);
+        return pocket;
+    }
+
+    private void CompletePocket(ChipPocketPresentation pocket)
+    {
+        Sequence flight = (Sequence)Get(pocket, "sequence");
+        Assert.That(flight, Is.Not.Null);
+        flight.SetUpdate(UpdateType.Manual);
+        DOTween.ManualUpdate(10f, 10f);
     }
     private void CompleteCardReveal()
     {
