@@ -30,6 +30,26 @@ public sealed class GameplaySoundController : IDisposable
             case GameplayPresentationCue.ChipBet:
                 SoundSystem.Instance.PlayChipStackSFX();
                 break;
+            
+            case GameplayPresentationCue.Item_ChipsPocket:
+                SoundSystem.Instance.PlayItemChipsPocketSFX();
+                break;
+
+            case GameplayPresentationCue.Item_Defy:
+                SoundSystem.Instance.PlayItemDefySFX();
+                break;
+
+            case GameplayPresentationCue.Item_PrizmChip:
+                SoundSystem.Instance.PlayItemPrizmChipSFX();
+                break;
+
+            case GameplayPresentationCue.Item_RefreshCard:
+                SoundSystem.Instance.PlayItemRefreshCardSFX();
+                break;
+
+            case GameplayPresentationCue.Click:
+                SoundSystem.Instance.PlayClickSFX();
+                break;
         }
     }
 }

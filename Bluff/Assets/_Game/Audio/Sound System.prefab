@@ -211,6 +211,14 @@ PrefabInstance:
       propertyPath: m_Volume
       value: 0.15
       objectReference: {fileID: 0}
+    - target: {fileID: 1901274378668933805, guid: 12380a58ec3cb5741b66a0d3a35c38d0, type: 3}
+      propertyPath: m_PlayOnAwake
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1901274378668933805, guid: 12380a58ec3cb5741b66a0d3a35c38d0, type: 3}
+      propertyPath: OutputAudioMixerGroup
+      value: 
+      objectReference: {fileID: 2322436912041139840, guid: c58c4649b735c5e47924a0bb6100857e, type: 2}
     - target: {fileID: 2904780514636651291, guid: 12380a58ec3cb5741b66a0d3a35c38d0, type: 3}
       propertyPath: m_Name
       value: Intro BGM
