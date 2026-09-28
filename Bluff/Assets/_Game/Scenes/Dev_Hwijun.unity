@@ -1219,6 +1219,14 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 702176072375794276, guid: 40065e3c1402d1c4f997f163eedc7b9a, type: 3}
+      propertyPath: clickSFX
+      value: 
+      objectReference: {fileID: 4266792812724180463, guid: f81ee8e06cf231a47b3040a5bbd8a0b4, type: 3}
+    - target: {fileID: 702176072375794276, guid: 40065e3c1402d1c4f997f163eedc7b9a, type: 3}
+      propertyPath: itemDefySFX
+      value: 
+      objectReference: {fileID: 2386559922514699222, guid: f56e89775fcb08043b4e993045182b42, type: 3}
+    - target: {fileID: 702176072375794276, guid: 40065e3c1402d1c4f997f163eedc7b9a, type: 3}
       propertyPath: MasterSlider
       value: 
       objectReference: {fileID: 1987659725}
@@ -1230,6 +1238,18 @@ PrefabInstance:
       propertyPath: SFXVolumeSlider
       value: 
       objectReference: {fileID: 676838128}
+    - target: {fileID: 702176072375794276, guid: 40065e3c1402d1c4f997f163eedc7b9a, type: 3}
+      propertyPath: itemPrizmChipSFX
+      value: 
+      objectReference: {fileID: 8686345737536884949, guid: f802d8f72daad5248ad503dcd60efd61, type: 3}
+    - target: {fileID: 702176072375794276, guid: 40065e3c1402d1c4f997f163eedc7b9a, type: 3}
+      propertyPath: itemChipsPocketSFX
+      value: 
+      objectReference: {fileID: 8353446949070429668, guid: e340f960c4628c3459ffeec98ccf526b, type: 3}
+    - target: {fileID: 702176072375794276, guid: 40065e3c1402d1c4f997f163eedc7b9a, type: 3}
+      propertyPath: itemRefreshCardSFX
+      value: 
+      objectReference: {fileID: 7760031898506863341, guid: e3ae3bd5f9fb583409c6edf5febe3ded, type: 3}
     - target: {fileID: 2606632211955907099, guid: 40065e3c1402d1c4f997f163eedc7b9a, type: 3}
       propertyPath: m_Name
       value: Sound System
@@ -2699,9 +2719,9 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.21
+  near clip plane: 0.3
   far clip plane: 1000
-  field of view: 60
+  field of view: 60.000004
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -2727,8 +2747,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.8, z: -0.75}
+  m_LocalRotation: {x: 0.13052616, y: 0, z: 0, w: 0.9914449}
+  m_LocalPosition: {x: 0, y: 2, z: -3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2758,7 +2778,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
